@@ -43,8 +43,8 @@ public class ScreenLog : MonoBehaviour {
 	// 記録されたログを画面出力する
 	void OnGUI()
 	{
-		// 出力された文字列を改行でつなぐ
-		string outMessage = "";
+        // 出力された文字列を改行でつなぐ
+        string outMessage = string.Empty; 
 		foreach (string msg in logMsg)
 		{
 			outMessage += msg + System.Environment.NewLine;

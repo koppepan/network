@@ -101,8 +101,30 @@ public class Session
 		OnCloseSession();
 	}
 
-	// 受信
-	void BeginReceive()
+    // 送信
+    void Send<Type>(ProtocolType type, Type data)
+    {
+        if (stream == null || !stream.CanWrite)
+        {
+            Close();
+            return;
+        }
+
+        var buffer = Pack(new Msg(type, Pack(data)));
+
+        try
+        {
+            tcpClient.Client.Send(buffer);
+        }
+        catch (SocketException e)
+        {
+            Debug.LogError(e);
+            Close();
+        }
+    }
+
+    // 受信
+    void BeginReceive()
 	{
 		try
 		{
@@ -117,12 +139,11 @@ public class Session
 				stream
 			);
 		}
-		catch(Exception e)
+		catch(SocketException e)
 		{
-			Close();
+            Close();
 			Debug.LogError(e);
 		}
-		
 	}
 
 	void ReceiveDataCallback(IAsyncResult result)
@@ -145,51 +166,9 @@ public class Session
 
 			BeginReceive();
 		}
-		catch (Exception e)
+		catch (SocketException e)
 		{
-			Close();
-			Debug.LogError(e);
-		}
-	}
-
-	
-	// 送信
-	void Send<Type>(ProtocolType type, Type data)
-	{
-		if (stream == null || !stream.CanWrite)
-		{
-			Close();
-			return;
-		}
-
-		var buffer = Pack(new Msg(type, Pack(data)));
-
-		try
-		{
-			stream.BeginWrite(
-			buffer,
-			0,
-			buffer.Length,
-			new AsyncCallback(WriteDataCallback),
-			stream);
-		}
-		catch(Exception e)
-		{
-			Close();
-			Debug.LogError(e);
-		}
-		
-	}
-
-	void WriteDataCallback(IAsyncResult result)
-	{
-		try
-		{
-			stream.EndWrite(result);
-		}
-		catch (Exception e)
-		{
-			Close();
+            Close();
 			Debug.LogError(e);
 		}
 	}
