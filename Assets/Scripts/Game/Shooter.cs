@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +18,10 @@ public class Shooter : MonoBehaviour {
     public int nowHP
     {
         get { return hp; }
+        set { hp = value; }
     }
+
+    public Action OnDead = () => { };
 
     public void SetPosition(float x)
     {
@@ -40,7 +44,8 @@ public class Shooter : MonoBehaviour {
         Destroy(other.gameObject);
 
         hp--;
-        if (hp != 0) return;
-        Debug.LogWarning("game over");
+        if (hp > 0) return;
+
+        OnDead();
     }
 }

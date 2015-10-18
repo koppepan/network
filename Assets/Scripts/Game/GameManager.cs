@@ -5,53 +5,58 @@ public class GameManager : MonoBehaviour {
 
     [SerializeField]
     Shooter player;
-	[SerializeField]
+    [SerializeField]
     Shooter enemy;
 
-	[SerializeField]
-	GameObject bulletPrefab;
+    [SerializeField]
+    GameObject gameOverPanel;
 
-	Session session;
+    Session session;
 
-	float moveLimit;
-	float topLimit;
+    float moveLimit;
+    float topLimit;
 
-	void Awake()
-	{
-		if (MainSystem.Instance == null) return;
-		session = MainSystem.Instance.Session;
+    void Awake()
+    {
+        if (MainSystem.Instance == null) return;
+        session = MainSystem.Instance.Session;
 
-		session.OnReceiveTextMessage += OnReceiveTextMessage;
-		session.OnReceivePlayerPosition += OnReceivePlayerPosition;
-		session.OnReceiveBulletFire += OnReceiveBulletFire;
-	}
+        session.OnReceiveTextMessage += OnReceiveTextMessage;
+        session.OnReceivePlayerPosition += OnReceivePlayerPosition;
+        session.OnReceiveBulletFire += OnReceiveBulletFire;
+        session.OnReceiveEnemyDead += OnReceiveEnemyDead;
+    }
 
-	void Start()
-	{
-		moveLimit = Camera.main.ScreenToWorldPoint(new Vector2(Screen.width, 0)).x;
-		topLimit = Camera.main.ScreenToWorldPoint(new Vector2(0, Screen.height)).y;
+    void Start()
+    {
+        moveLimit = Camera.main.ScreenToWorldPoint(new Vector2(Screen.width, 0)).x;
+        topLimit = Camera.main.ScreenToWorldPoint(new Vector2(0, Screen.height)).y;
 
-        player.PositionY = -topLimit + (player.transform.localScale.y /2);
+        player.PositionY = -topLimit + (player.transform.localScale.y / 2);
         player.SetPosition(0);
+        player.OnDead += OnPlayerDead;
 
         enemy.PositionY = topLimit - (enemy.transform.localScale.y / 2);
         enemy.SetPosition(0);
-	}
+    }
 
-	void OnDestroy()
-	{
-		if (session == null) return;
-		session.OnReceiveTextMessage -= OnReceiveTextMessage;
-		session.OnReceivePlayerPosition -= OnReceivePlayerPosition;
-		session.OnReceiveBulletFire -= OnReceiveBulletFire;
-	}
+    void OnDestroy()
+    {
+        player.OnDead -= OnPlayerDead;
 
-	void Update()
-	{
-		// Vector3でマウス位置座標を取得する
-		var position = Input.mousePosition;
-		// マウス位置座標をスクリーン座標からワールド座標に変換する
-		var movePosition = Camera.main.ScreenToWorldPoint(position);
+        if (session == null) return;
+        session.OnReceiveTextMessage -= OnReceiveTextMessage;
+        session.OnReceivePlayerPosition -= OnReceivePlayerPosition;
+        session.OnReceiveBulletFire -= OnReceiveBulletFire;
+        session.OnReceiveEnemyDead -= OnReceiveEnemyDead;
+    }
+
+    void Update()
+    {
+        // Vector3でマウス位置座標を取得する
+        var position = Input.mousePosition;
+        // マウス位置座標をスクリーン座標からワールド座標に変換する
+        var movePosition = Camera.main.ScreenToWorldPoint(position);
 
         if (Input.GetMouseButtonDown(0))
         {
@@ -61,18 +66,25 @@ public class GameManager : MonoBehaviour {
         }
 
         if (movePosition.x != transform.localPosition.x)
-		{
-			if (movePosition.x > -moveLimit && movePosition.x < moveLimit)
-			{
+        {
+            if (movePosition.x > -moveLimit && movePosition.x < moveLimit)
+            {
                 // ワールド座標に変換されたマウス座標を代入
                 player.SetPosition(movePosition.x);
                 if (session == null) return;
-				session.SendPlayerPosition(new PlayerPosition(player.transform.localPosition.x));
-			}
-		}
-	}
+                session.SendPlayerPosition(new PlayerPosition(player.transform.localPosition.x));
+            }
+        }
+    }
 
-	void OnReceiveTextMessage(TextMessage msg)
+    void OnPlayerDead()
+    {
+        session.SendDead();
+        gameOverPanel.SetActive(true);
+    }
+
+
+    void OnReceiveTextMessage(TextMessage msg)
 	{
 		Debug.Log(msg.text);
 	}
@@ -86,4 +98,10 @@ public class GameManager : MonoBehaviour {
 	{
 		enemy.BulletFire(msg.pos, Vector2.down);
 	}
+
+    void OnReceiveEnemyDead()
+    {
+        Debug.LogWarning("win");
+        gameOverPanel.SetActive(true);
+    }
 }

@@ -8,6 +8,8 @@ public enum ProtocolType
 	TextOnly,
 	PlayerPosition,
 	BulletFire,
+    SyncHitPoint,
+    Dead,
 };
 
 public struct Msg
@@ -20,6 +22,11 @@ public struct Msg
 		this.type = type;
 		this.data = data;
 	}
+    public Msg(ProtocolType type)
+    {
+        this.type = type;
+        data = null;
+    }
 }
 
 public struct TextMessage
@@ -47,4 +54,13 @@ public struct BulletFire
 	{
 		this.pos = pos;
 	}
+}
+
+public struct SyncHitPoint
+{
+    public int hp;
+    public SyncHitPoint(int hp)
+    {
+        this.hp = hp;
+    }
 }

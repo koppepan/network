@@ -8,98 +8,98 @@ using System.Net.Sockets;
 
 public class Session
 {
-	// シリアライズ
-	static MsgPack.ObjectPacker packer = new MsgPack.ObjectPacker();
+    // シリアライズ
+    static MsgPack.ObjectPacker packer = new MsgPack.ObjectPacker();
 
-	static byte[] Pack<Type>(Type data)
-	{
-		return packer.Pack(data);
-	}
+    static byte[] Pack<Type>(Type data)
+    {
+        return packer.Pack(data);
+    }
 
-	static Type UnPack<Type>(byte[] data)
-	{
-		return packer.Unpack<Type>(data);
-	}
+    static Type UnPack<Type>(byte[] data)
+    {
+        return packer.Unpack<Type>(data);
+    }
 
-	TcpListener listener;
-	TcpClient tcpClient;
+    TcpListener listener;
+    TcpClient tcpClient;
 
-	NetworkStream stream;
+    NetworkStream stream;
 
-	byte[] ReceiveBuffer = new byte[1024];
+    byte[] ReceiveBuffer = new byte[1024];
 
-	public Action AcceptConnect = () => { };
-	public Action OnCloseSession = () => { };
-	public Action<Msg> OnRecvMessage = (msg) => { };
+    public Action AcceptConnect = () => { };
+    public Action OnCloseSession = () => { };
+    public Action<Msg> OnRecvMessage = (msg) => { };
 
-	// サーバーに接続に行く
-	public Session(string host, int port)
-	{
-		tcpClient = new TcpClient(AddressFamily.InterNetwork);
-		IPAddress[] remoteHost = Dns.GetHostAddresses(host);
+    // サーバーに接続に行く
+    public Session(string host, int port)
+    {
+        tcpClient = new TcpClient(AddressFamily.InterNetwork);
+        IPAddress[] remoteHost = Dns.GetHostAddresses(host);
 
-		Debug.Log(string.Format("Connection Request to {0}:{1}", remoteHost[0], port));
+        Debug.Log(string.Format("Connection Request to {0}:{1}", remoteHost[0], port));
 
-		tcpClient.BeginConnect(remoteHost[0], port, new AsyncCallback(ConnectCallback), tcpClient);
-	}
+        tcpClient.BeginConnect(remoteHost[0], port, new AsyncCallback(ConnectCallback), tcpClient);
+    }
 
-	void ConnectCallback(IAsyncResult result)
-	{
-		tcpClient = (TcpClient)result.AsyncState;
-		tcpClient.EndConnect(result);
-		Debug.Log(string.Format("Connection to {0}:{1}",
-			((IPEndPoint)tcpClient.Client.RemoteEndPoint).Address,
-			((IPEndPoint)tcpClient.Client.RemoteEndPoint).Port));
+    void ConnectCallback(IAsyncResult result)
+    {
+        tcpClient = (TcpClient)result.AsyncState;
+        tcpClient.EndConnect(result);
+        Debug.Log(string.Format("Connection to {0}:{1}",
+            ((IPEndPoint)tcpClient.Client.RemoteEndPoint).Address,
+            ((IPEndPoint)tcpClient.Client.RemoteEndPoint).Port));
 
-		stream = tcpClient.GetStream();
-		AcceptConnect();
-		BeginReceive();
-	}
+        stream = tcpClient.GetStream();
+        AcceptConnect();
+        BeginReceive();
+    }
 
 
-	// クライアントからの接続街
-	public Session(int port)
-	{
-		listener = new TcpListener(IPAddress.Any, port);
-		listener.Start();
+    // クライアントからの接続街
+    public Session(int port)
+    {
+        listener = new TcpListener(IPAddress.Any, port);
+        listener.Start();
 
-		Debug.Log(string.Format("Listen Start to {0}:{1}", IPAddress.Parse(UnityEngine.Network.player.ipAddress), port));
+        Debug.Log(string.Format("Listen Start to {0}:{1}", IPAddress.Parse(UnityEngine.Network.player.ipAddress), port));
 
-		listener.BeginAcceptTcpClient(
-			new AsyncCallback(ListenerCallback),
-			listener);
-	}
+        listener.BeginAcceptTcpClient(
+            new AsyncCallback(ListenerCallback),
+            listener);
+    }
 
-	void ListenerCallback(IAsyncResult result)
-	{
-		listener = (TcpListener)result.AsyncState;
-		tcpClient = listener.EndAcceptTcpClient(result);
+    void ListenerCallback(IAsyncResult result)
+    {
+        listener = (TcpListener)result.AsyncState;
+        tcpClient = listener.EndAcceptTcpClient(result);
 
-		Debug.Log(string.Format("Connection to {0}:{1}",
-			((IPEndPoint)tcpClient.Client.RemoteEndPoint).Address,
-			((IPEndPoint)tcpClient.Client.RemoteEndPoint).Port));
+        Debug.Log(string.Format("Connection to {0}:{1}",
+            ((IPEndPoint)tcpClient.Client.RemoteEndPoint).Address,
+            ((IPEndPoint)tcpClient.Client.RemoteEndPoint).Port));
 
-		listener.Stop();
+        listener.Stop();
 
-		stream = tcpClient.GetStream();
-		AcceptConnect();
-		BeginReceive();
-	}
+        stream = tcpClient.GetStream();
+        AcceptConnect();
+        BeginReceive();
+    }
 
-	// Sessionを切断
-	public void Close()
-	{
-		if (stream != null)
-		{
-			stream.Close();
-			stream = null;
-		}
-		if (tcpClient != null)
-		{
-			tcpClient.Close();
-		}
-		OnCloseSession();
-	}
+    // Sessionを切断
+    public void Close()
+    {
+        if (stream != null)
+        {
+            stream.Close();
+            stream = null;
+        }
+        if (tcpClient != null)
+        {
+            tcpClient.Close();
+        }
+        OnCloseSession();
+    }
 
     // 送信
     void Send<Type>(ProtocolType type, Type data)
@@ -109,12 +109,24 @@ public class Session
             Close();
             return;
         }
+        Send(Pack(new Msg(type, Pack(data))));
+    }
 
-        var buffer = Pack(new Msg(type, Pack(data)));
+    void Send(Msg msg)
+    {
+        if (stream == null || !stream.CanWrite)
+        {
+            Close();
+            return;
+        }
+        Send(Pack(msg));
+    }
 
+    void Send(byte[] msg)
+    {
         try
         {
-            tcpClient.Client.Send(buffer);
+            tcpClient.Client.Send(msg);
         }
         catch (SocketException e)
         {
@@ -196,6 +208,10 @@ public class Session
 			case ProtocolType.BulletFire:
 				OnReceiveBulletFire(UnPack<BulletFire>(msg.data));
 				break;
+
+            case ProtocolType.Dead:
+                OnReceiveEnemyDead();
+                break;
 		}
 	}
 
@@ -216,4 +232,10 @@ public class Session
 	{
 		Send(ProtocolType.BulletFire, msg);
 	}
+
+    public Action OnReceiveEnemyDead = () => { };
+    public void SendDead()
+    {
+        Send(new Msg(ProtocolType.Dead));
+    }
 }
