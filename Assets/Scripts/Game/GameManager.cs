@@ -64,7 +64,7 @@ public class GameManager : MonoBehaviour {
         {
             player.BulletFire(player.transform.localPosition.x, Vector2.up);
             if (session == null) return;
-            session.SendBulletFire(new Network.BulletFire(player.transform.localPosition.x));
+            session.SendBulletFire(player.transform.localPosition.x);
         }
 
         if (movePosition.x != transform.localPosition.x)
@@ -74,7 +74,7 @@ public class GameManager : MonoBehaviour {
                 // ワールド座標に変換されたマウス座標を代入
                 player.SetPosition(movePosition.x);
                 if (session == null) return;
-                session.SendPlayerPosition(new Network.PlayerPosition(player.transform.localPosition.x));
+                session.SendPlayerPosition(player.transform.localPosition.x);
             }
         }
     }

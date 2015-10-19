@@ -175,19 +175,19 @@ namespace Network
             }
         }
 
-        public void SendTextMessage(TextMessage msg)
+        public void SendTextMessage(string text)
         {
-            Send(ProtocolType.TextOnly, msg);
+            Send(ProtocolType.TextOnly, new TextMessage(text));
         }
 
-        public void SendPlayerPosition(PlayerPosition msg)
+        public void SendPlayerPosition(float pos)
         {
-            Send(ProtocolType.PlayerPosition, msg);
+            Send(ProtocolType.PlayerPosition, new PlayerPosition(pos));
         }
 
-        public void SendBulletFire(BulletFire msg)
+        public void SendBulletFire(float pos)
         {
-            Send(ProtocolType.BulletFire, msg);
+            Send(ProtocolType.BulletFire, new BulletFire(pos));
         }
 
         public void SendDead()
