@@ -11,7 +11,8 @@ public class GameManager : MonoBehaviour {
     [SerializeField]
     GameObject gameOverPanel;
 
-    Session session;
+    Network.Session session;
+    Network.Executor executor;
 
     float moveLimit;
     float topLimit;
@@ -21,10 +22,11 @@ public class GameManager : MonoBehaviour {
         if (MainSystem.Instance == null) return;
         session = MainSystem.Instance.Session;
 
-        session.OnReceiveTextMessage += OnReceiveTextMessage;
-        session.OnReceivePlayerPosition += OnReceivePlayerPosition;
-        session.OnReceiveBulletFire += OnReceiveBulletFire;
-        session.OnReceiveEnemyDead += OnReceiveEnemyDead;
+        executor = MainSystem.Instance.Executor;
+        executor.OnReceiveTextMessage += OnReceiveTextMessage;
+        executor.OnReceivePlayerPosition += OnReceivePlayerPosition;
+        executor.OnReceiveBulletFire += OnReceiveBulletFire;
+        executor.OnReceiveEnemyDead += OnReceiveEnemyDead;
     }
 
     void Start()
@@ -45,10 +47,10 @@ public class GameManager : MonoBehaviour {
         player.OnDead -= OnPlayerDead;
 
         if (session == null) return;
-        session.OnReceiveTextMessage -= OnReceiveTextMessage;
-        session.OnReceivePlayerPosition -= OnReceivePlayerPosition;
-        session.OnReceiveBulletFire -= OnReceiveBulletFire;
-        session.OnReceiveEnemyDead -= OnReceiveEnemyDead;
+        executor.OnReceiveTextMessage -= OnReceiveTextMessage;
+        executor.OnReceivePlayerPosition -= OnReceivePlayerPosition;
+        executor.OnReceiveBulletFire -= OnReceiveBulletFire;
+        executor.OnReceiveEnemyDead -= OnReceiveEnemyDead;
     }
 
     void Update()
@@ -62,7 +64,7 @@ public class GameManager : MonoBehaviour {
         {
             player.BulletFire(player.transform.localPosition.x, Vector2.up);
             if (session == null) return;
-            session.SendBulletFire(new BulletFire(player.transform.localPosition.x));
+            session.SendBulletFire(new Network.BulletFire(player.transform.localPosition.x));
         }
 
         if (movePosition.x != transform.localPosition.x)
@@ -72,7 +74,7 @@ public class GameManager : MonoBehaviour {
                 // ワールド座標に変換されたマウス座標を代入
                 player.SetPosition(movePosition.x);
                 if (session == null) return;
-                session.SendPlayerPosition(new PlayerPosition(player.transform.localPosition.x));
+                session.SendPlayerPosition(new Network.PlayerPosition(player.transform.localPosition.x));
             }
         }
     }
@@ -84,17 +86,17 @@ public class GameManager : MonoBehaviour {
     }
 
 
-    void OnReceiveTextMessage(TextMessage msg)
+    void OnReceiveTextMessage(Network.TextMessage msg)
 	{
 		Debug.Log(msg.text);
 	}
 
-	void OnReceivePlayerPosition(PlayerPosition msg)
+	void OnReceivePlayerPosition(Network.PlayerPosition msg)
 	{
         enemy.SetPosition(msg.pos);
 	}
 
-	void OnReceiveBulletFire(BulletFire msg)
+	void OnReceiveBulletFire(Network.BulletFire msg)
 	{
 		enemy.BulletFire(msg.pos, Vector2.down);
 	}

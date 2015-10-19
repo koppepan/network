@@ -2,11 +2,15 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Network;
 
 public class MainSystem : MonoBehaviour {
 
 	Session session;
 	public Session Session { get { return session; } }
+
+    Executor executor;
+    public Executor Executor { get { return executor; } }
 
 	static MainSystem instance;
 	public static MainSystem Instance
@@ -35,6 +39,8 @@ public class MainSystem : MonoBehaviour {
 		// 自身が唯一のインスタンスとなる
 		existsInstance = true;
 		DontDestroyOnLoad(gameObject);
+
+        executor = new Executor();
 	}
 
 	void OnApplicationQuit()
@@ -86,7 +92,7 @@ public class MainSystem : MonoBehaviour {
 		// Queueが空になるまで内容をDequeue
 		while (0 < msgQueue.Count)
 		{
-			session.DoProtocol(msgQueue.Dequeue());
+			executor.DoProtocol(msgQueue.Dequeue());
 		}
 	}
 }
