@@ -4,16 +4,26 @@ using System.Collections;
 
 public class PlayerShooter : Shooter
 {
+    enum Vector
+    {
+        None,
+        Right,
+        Left,
+    };
+
+    [SerializeField]
+    float moveSpeed = 0.1f;
 
     Network.Session session;
 
     float moveLimit;
+    Vector moveVector = Vector.None;
 
     public Action OnDead = () => { };
 
     void Awake()
     {
-        moveLimit = Camera.main.ScreenToWorldPoint(new Vector2(Screen.width, 0)).x;
+        moveLimit = Camera.main.ScreenToWorldPoint(new Vector2(Screen.width, 0)).x - (transform.localScale.x / 2);
 
         if (MainSystem.Instance == null) return;
         session = MainSystem.Instance.Session;
@@ -21,30 +31,43 @@ public class PlayerShooter : Shooter
 
     void Update()
     {
-        // Vector3でマウス位置座標を取得する
-        var position = Input.mousePosition;
-        // マウス位置座標をスクリーン座標からワールド座標に変換する
-        var movePosition = Camera.main.ScreenToWorldPoint(position);
+        MoveUpdate();
+    }
 
-        if (Input.GetMouseButtonDown(0))
-        {
-            BulletFire(transform.localPosition.x, Vector2.up);
+    public void PushRightButton()
+    {
+        moveVector = Vector.Right;
+    }
+    public void PushLeftButton()
+    {
+        moveVector = Vector.Left;
+    }
+    public void ReleaseButton()
+    {
+        moveVector = Vector.None;
+    }
 
-            if (session == null) return;
-            session.SendBulletFire(transform.localPosition.x);
-        }
+    void MoveUpdate()
+    {
+        if (moveVector == Vector.None) return;
 
-        if (movePosition.x != transform.localPosition.x)
-        {
-            if (movePosition.x > -moveLimit && movePosition.x < moveLimit)
-            {
-                // ワールド座標に変換されたマウス座標を代入
-                SetPosition(movePosition.x);
+        var move = Vector3.right * moveSpeed * (moveVector == Vector.Right ? 1 : -1);
+        var afterPos = transform.localPosition.x + move.x; 
 
-                if (session == null) return;
-                session.SendPlayerPosition(transform.localPosition.x);
-            }
-        }
+        if (afterPos < -moveLimit || afterPos > moveLimit) return;
+
+        transform.localPosition += move;
+
+        if (session == null) return;
+        session.SendPlayerPosition(transform.localPosition.x);
+    }
+
+    public void BulletFire()
+    {
+        BulletFire(transform.localPosition.x, Vector2.up);
+
+        if (session == null) return;
+        session.SendBulletFire(transform.localPosition.x);
     }
 
     protected override void OnTriggerEnter(Collider other)
