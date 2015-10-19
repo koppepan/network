@@ -48,6 +48,11 @@ public class GameManager : MonoBehaviour {
         executor.OnReceiveEnemyDead -= OnReceiveEnemyDead;
     }
 
+    public void GotoTitle()
+    {
+        Application.LoadLevel("title");
+    }
+
     void OnGameOver()
     {
         gameOverPanel.SetActive(true);
