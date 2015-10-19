@@ -21,8 +21,6 @@ public class Shooter : MonoBehaviour {
         set { hp = value; }
     }
 
-    public Action OnDead = () => { };
-
     public void SetPosition(float x)
     {
         transform.position = new Vector2(x, PositionY);
@@ -36,7 +34,7 @@ public class Shooter : MonoBehaviour {
         obj.GetComponent<Bullet>().SetVector(vec);
     }
 
-    private void OnTriggerEnter(Collider other)
+    protected virtual void OnTriggerEnter(Collider other)
     {
         selfBullets.RemoveAll(x => x == null);
         if (selfBullets.Any(x => x == other.gameObject)) return;
@@ -44,8 +42,5 @@ public class Shooter : MonoBehaviour {
         Destroy(other.gameObject);
 
         hp--;
-        if (hp > 0) return;
-
-        OnDead();
     }
 }
