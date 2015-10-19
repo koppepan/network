@@ -9,12 +9,7 @@ public class TitleScene : MonoBehaviour
 	[SerializeField]
 	Text serverAddressText;
 	[SerializeField]
-	Button serverStartButton;
-
-	[SerializeField]
 	InputField clientAddress;
-	[SerializeField]
-	Button clientStartButto;
 
 	[SerializeField]
 	GameObject darken;
@@ -28,19 +23,18 @@ public class TitleScene : MonoBehaviour
 	{
 		serverAddressText.text = IPAddress.Parse(UnityEngine.Network.player.ipAddress).ToString();
 		clientAddress.text = serverAddressText.text;
-
-		serverStartButton.onClick.AddListener(ServerStart);
-		clientStartButto.onClick.AddListener(ClientStart);
 	}
 
-	void ServerStart()
+	public void ServerStart()
 	{
 		darken.SetActive(true);
 		MainSystem.Instance.ListenStart();
 	}
 
-	void ClientStart()
+	public void ClientStart()
 	{
+        if (clientAddress.text == string.Empty) return;
+
 		darken.SetActive(true);
 		MainSystem.Instance.ConnectRequest(clientAddress.text);
 	}
