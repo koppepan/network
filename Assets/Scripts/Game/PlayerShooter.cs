@@ -19,6 +19,9 @@ public class PlayerShooter : Shooter
     float moveLimit;
     Vector moveVector = Vector.None;
 
+    bool rightPush = false;
+    bool leftPush = false;
+
     public Action OnDead = () => { };
 
     void Awake()
@@ -36,20 +39,32 @@ public class PlayerShooter : Shooter
 
     public void PushRightButton()
     {
+        rightPush = true;
         moveVector = Vector.Right;
-    }
-    public void PushLeftButton()
-    {
-        moveVector = Vector.Left;
     }
     public void ReleaseRightButton()
     {
-        if (moveVector == Vector.Left) return;
+        rightPush = false;
+        if(leftPush)
+        {
+            moveVector = Vector.Left;
+            return;
+        }
         moveVector = Vector.None;
+    }
+    public void PushLeftButton()
+    {
+        leftPush = true;
+        moveVector = Vector.Left;
     }
     public void ReleaseLeftButton()
     {
-        if (moveVector == Vector.Right) return;
+        leftPush = false;
+        if(rightPush)
+        {
+            moveVector = Vector.Right;
+            return;
+        }
         moveVector = Vector.None;
     }
 
