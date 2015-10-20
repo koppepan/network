@@ -42,8 +42,14 @@ public class PlayerShooter : Shooter
     {
         moveVector = Vector.Left;
     }
-    public void ReleaseButton()
+    public void ReleaseRightButton()
     {
+        if (moveVector == Vector.Left) return;
+        moveVector = Vector.None;
+    }
+    public void ReleaseLeftButton()
+    {
+        if (moveVector == Vector.Right) return;
         moveVector = Vector.None;
     }
 
