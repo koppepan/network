@@ -4,23 +4,25 @@ using System.Collections;
 
 public class PlayerShooter : Shooter
 {
-    enum Vector
-    {
-        None,
-        Right,
-        Left,
-    };
+	enum Vector
+	{
+		None,
+		Right,
+		Left,
+	};
 
-    [SerializeField]
-    float moveSpeed = 0.1f;
+	[SerializeField]
+	float moveSpeed = 0.1f;
 
-    Network.Session session;
+	Network.Session session;
 
-    float moveLimit;
-    Vector moveVector = Vector.None;
+	float moveLimit;
+	Vector moveVector = Vector.None;
 
-    bool rightPush = false;
-    bool leftPush = false;
+	bool rightPush = false;
+	bool leftPush = false;
+
+	public bool IsFire { get; set; }
 
     public Action OnDead = () => { };
 
@@ -85,6 +87,8 @@ public class PlayerShooter : Shooter
 
     public void BulletFire()
     {
+		if (!IsFire) return;
+
         BulletFire(transform.localPosition.x, Vector2.up);
 
         if (session == null) return;

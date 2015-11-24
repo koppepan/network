@@ -10,6 +10,8 @@ public class GameManager : MonoBehaviour {
 
     [SerializeField]
     GameObject gameOverPanel;
+	[SerializeField]
+	CountDown countDown;
 
     Network.Executor executor;
 
@@ -25,6 +27,8 @@ public class GameManager : MonoBehaviour {
         executor.OnReceiveEnemyDead += OnReceiveEnemyDead;
 
         player.OnDead += OnGameOver;
+
+		countDown.OnFinish = () => { player.IsFire = true; };
     }
 
     void Start()
